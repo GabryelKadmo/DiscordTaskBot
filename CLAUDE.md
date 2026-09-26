@@ -1,6 +1,6 @@
 # DiscordTaskBot
 
-Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens do canal de tasks em tasks interativas (reação de estado + botões Copiar/Iniciar/Concluir/Excluir).
+Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens do canal de tasks em tasks interativas (reação de estado + botões Iniciar/Concluir/Excluir). Não há botão Copiar: bot não acessa a área de transferência e o "Copiar texto" nativo do Discord já resolve.
 
 ## Comandos
 

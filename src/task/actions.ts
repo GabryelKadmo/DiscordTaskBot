@@ -1,4 +1,4 @@
-export const TASK_ACTIONS = ['copy', 'start', 'complete', 'delete'] as const;
+export const TASK_ACTIONS = ['start', 'complete', 'delete'] as const;
 export type TaskAction = (typeof TASK_ACTIONS)[number];
 
 export const PERMISSION_ACTIONS = ['create', ...TASK_ACTIONS] as const;
@@ -6,7 +6,6 @@ export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
 
 export const ACTION_LABELS: Record<PermissionAction, string> = {
   create: 'Criar',
-  copy: 'Copiar',
   start: 'Iniciar',
   complete: 'Concluir',
   delete: 'Excluir',

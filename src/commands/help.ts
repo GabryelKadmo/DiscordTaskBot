@@ -12,7 +12,6 @@ export async function handleHelpCommand(interaction: ChatInputCommandInteraction
     [
       '## Tasks',
       `Quem tem permissão **Criar** manda uma mensagem no canal de tasks. O bot reage com ${received} e responde mencionando o responsável, com os botões:`,
-      '- **Copiar** — mostra o texto da task só para você',
       `- **Iniciar** — marca como em andamento (${started})`,
       `- **Concluir** — marca como concluída (${done})`,
       '- **Excluir** — apaga a task',

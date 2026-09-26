@@ -1,4 +1,4 @@
-import { AttachmentBuilder, MessageFlags, type ButtonInteraction, type Message } from 'discord.js';
+import type { ButtonInteraction, Message } from 'discord.js';
 import { config } from '../config.js';
 import { ignoreUnknownMessage } from '../discordErrors.js';
 import { replyEphemeral } from '../interactionReply.js';
@@ -8,12 +8,14 @@ import { buildTaskComponents } from './components.js';
 import { canPerform } from './permissions.js';
 import { setStateReaction } from './reactions.js';
 
-const CODE_BLOCK_LIMIT = 2000 - '```\n\n```'.length;
 const inProgress = new Set<string>();
 
 export async function handleTaskButton(interaction: ButtonInteraction): Promise<void> {
   const parsed = parseCustomId(interaction.customId);
-  if (!parsed) return;
+  if (!parsed) {
+    await replyEphemeral(interaction, 'Esse botão não está mais disponível.');
+    return;
+  }
 
   if (!interaction.inCachedGuild()) {
     await replyEphemeral(interaction, 'Essa ação só funciona dentro de um servidor.');
@@ -35,11 +37,6 @@ export async function handleTaskButton(interaction: ButtonInteraction): Promise<
 }
 
 async function runAction(interaction: ButtonInteraction, action: TaskAction, messageId: string) {
-  if (action === 'copy') {
-    await copyTask(interaction, messageId);
-    return;
-  }
-
   if (inProgress.has(messageId)) {
     await replyEphemeral(interaction, 'Essa task já está sendo atualizada.');
     return;
@@ -68,30 +65,6 @@ async function runAction(interaction: ButtonInteraction, action: TaskAction, mes
   } finally {
     inProgress.delete(messageId);
   }
-}
-
-async function copyTask(interaction: ButtonInteraction, messageId: string) {
-  const original = await fetchOriginal(interaction, messageId);
-  if (!original) {
-    await replyEphemeral(interaction, 'A mensagem original dessa task não existe mais.');
-    return;
-  }
-
-  const content = original.content;
-  if (!content) {
-    await replyEphemeral(interaction, 'Essa task não possui texto.');
-    return;
-  }
-
-  if (content.length <= CODE_BLOCK_LIMIT && !content.includes('```')) {
-    await replyEphemeral(interaction, `\`\`\`\n${content}\n\`\`\``);
-    return;
-  }
-
-  await interaction.reply({
-    files: [new AttachmentBuilder(Buffer.from(content, 'utf8'), { name: 'task.txt' })],
-    flags: MessageFlags.Ephemeral,
-  });
 }
 
 async function fetchOriginal(interaction: ButtonInteraction, messageId: string): Promise<Message | null> {
