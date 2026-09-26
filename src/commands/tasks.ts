@@ -27,13 +27,12 @@ export const tasksCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName('canal')
-      .setDescription('Define o canal ou thread monitorado')
+      .setDescription('Define o canal ou tópico monitorado (vazio usa o canal/tópico atual)')
       .addChannelOption((option) =>
         option
           .setName('canal')
-          .setDescription('Canal ou thread de tasks')
-          .addChannelTypes(...TASK_CHANNEL_TYPES)
-          .setRequired(true),
+          .setDescription('Canal ou tópico de tasks')
+          .addChannelTypes(...TASK_CHANNEL_TYPES),
       ),
   )
   .addSubcommand((sub) =>
@@ -65,7 +64,7 @@ export const tasksCommand = new SlashCommandBuilder()
 const permissionLabels = {
   ViewChannel: 'Ver canal',
   SendMessages: 'Enviar mensagens',
-  SendMessagesInThreads: 'Enviar mensagens em threads',
+  SendMessagesInThreads: 'Enviar mensagens em tópicos',
   ReadMessageHistory: 'Ver histórico de mensagens',
   AddReactions: 'Adicionar reações',
   ManageMessages: 'Gerenciar mensagens',
@@ -89,11 +88,16 @@ export async function handleTasksCommand(interaction: ChatInputCommandInteractio
 }
 
 async function setChannel(interaction: ChatInputCommandInteraction<'cached'>) {
-  const channel = interaction.options.getChannel('canal', true, TASK_CHANNEL_TYPES);
+  const channel = interaction.options.getChannel('canal', false, TASK_CHANNEL_TYPES) ?? interaction.channel;
+  if (!channel || !(TASK_CHANNEL_TYPES as readonly ChannelType[]).includes(channel.type)) {
+    await replyEphemeral(interaction, 'Esse canal não pode ser usado para tasks. Use um canal de texto ou um tópico.');
+    return;
+  }
+
   const warnings: string[] = [];
 
   if (channel.isThread() && !channel.joined) {
-    await channel.join().catch(() => warnings.push('o bot não conseguiu entrar na thread; mencione ele dentro dela'));
+    await channel.join().catch(() => warnings.push('o bot não conseguiu entrar no tópico; mencione ele dentro dele'));
   }
 
   const permissions = channel.permissionsFor(interaction.guild.members.me!);
