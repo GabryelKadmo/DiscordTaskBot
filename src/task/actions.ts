@@ -13,13 +13,13 @@ export const ACTION_LABELS: Record<PermissionAction, string> = {
 
 const PREFIX = 'task';
 
-export function buildCustomId(action: TaskAction, messageId: string): string {
-  return `${PREFIX}:${action}:${messageId}`;
+export function buildCustomId(action: TaskAction, originalId?: string): string {
+  return originalId ? `${PREFIX}:${action}:${originalId}` : `${PREFIX}:${action}`;
 }
 
-export function parseCustomId(customId: string): { action: TaskAction; messageId: string } | null {
-  const [prefix, action, messageId] = customId.split(':');
-  if (prefix !== PREFIX || !messageId) return null;
+export function parseCustomId(customId: string): { action: TaskAction; originalId?: string } | null {
+  const [prefix, action, originalId] = customId.split(':');
+  if (prefix !== PREFIX) return null;
   if (!TASK_ACTIONS.includes(action as TaskAction)) return null;
-  return { action: action as TaskAction, messageId };
+  return { action: action as TaskAction, originalId };
 }
