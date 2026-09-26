@@ -19,7 +19,7 @@ export async function handleHelpCommand(interaction: ChatInputCommandInteraction
       'Cada botão só funciona para quem tem a permissão correspondente.',
       '',
       '## Configuração (administradores)',
-      '- `/tasks canal` — define o canal monitorado',
+      '- `/tasks canal` — define o canal ou thread monitorado',
       '- `/tasks permissao-adicionar` / `/tasks permissao-remover` — libera ou remove uma ação para um usuário ou cargo',
       '- `/tasks mencionar` — define quem é mencionado a cada nova task',
       '- `/tasks config` — mostra a configuração atual',

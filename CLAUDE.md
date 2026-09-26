@@ -36,7 +36,7 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 ## Setup no Discord
 
 - Intent privilegiado **Message Content** ativado no Developer Portal.
-- Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original). O `/tasks canal` avisa se faltar alguma.
+- Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original). Em thread, Send Messages In Threads no lugar de Send Messages. O `/tasks canal` aceita canal ou thread, entra na thread e avisa se faltar alguma permissão.
 ## Git
 
 - Sem branch de integração: feature branch → PR para `main`, que aguarda aprovação manual.
