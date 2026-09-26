@@ -12,6 +12,7 @@ function optional(name: string, fallback: string): string {
 
 export const config = {
   token: required('DISCORD_TOKEN'),
+  dataDir: optional('DATA_DIR', 'data'),
   emojis: {
     received: optional('EMOJI_RECEIVED', '👀'),
     started: optional('EMOJI_STARTED', '🔨'),

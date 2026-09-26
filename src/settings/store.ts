@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { config } from '../config.js';
 import { PERMISSION_ACTIONS, type PermissionAction } from '../task/actions.js';
 
 export type Target = { type: 'user' | 'role'; id: string };
@@ -11,7 +12,7 @@ export type GuildSettings = {
   permissions: Record<PermissionAction, Target[]>;
 };
 
-const FILE = path.resolve('data', 'settings.json');
+const FILE = path.resolve(config.dataDir, 'settings.json');
 
 const settingsByGuild: Record<string, GuildSettings> = existsSync(FILE)
   ? JSON.parse(readFileSync(FILE, 'utf8'))
