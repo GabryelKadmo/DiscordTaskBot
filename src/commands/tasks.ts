@@ -4,13 +4,20 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
-  type GuildTextBasedChannel,
 } from 'discord.js';
 import { replyEphemeral } from '../interactionReply.js';
 import { formatTarget, getGuildSettings, updateGuildSettings, type Target } from '../settings/store.js';
 import { ACTION_LABELS, PERMISSION_ACTIONS, type PermissionAction } from '../task/actions.js';
 
-const actionChoices = PERMISSION_ACTIONS.map((action) => ({ name: ACTION_LABELS[action], value: action }));
+const TASK_CHANNEL_TYPES = [
+  ChannelType.GuildText,
+  ChannelType.GuildAnnouncement,
+  ChannelType.PublicThread,
+  ChannelType.PrivateThread,
+  ChannelType.AnnouncementThread,
+] as const;
+
+const actionChoices =PERMISSION_ACTIONS.map((action) => ({ name: ACTION_LABELS[action], value: action }));
 
 export const tasksCommand = new SlashCommandBuilder()
   .setName('tasks')
@@ -20,12 +27,12 @@ export const tasksCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName('canal')
-      .setDescription('Define o canal monitorado')
+      .setDescription('Define o canal ou thread monitorado')
       .addChannelOption((option) =>
         option
           .setName('canal')
-          .setDescription('Canal de tasks')
-          .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+          .setDescription('Canal ou thread de tasks')
+          .addChannelTypes(...TASK_CHANNEL_TYPES)
           .setRequired(true),
       ),
   )
@@ -55,15 +62,21 @@ export const tasksCommand = new SlashCommandBuilder()
   )
   .addSubcommand((sub) => sub.setName('config').setDescription('Mostra a configuração atual'));
 
-const requiredChannelPermissions = {
+const permissionLabels = {
   ViewChannel: 'Ver canal',
   SendMessages: 'Enviar mensagens',
+  SendMessagesInThreads: 'Enviar mensagens em threads',
   ReadMessageHistory: 'Ver histórico de mensagens',
   AddReactions: 'Adicionar reações',
   ManageMessages: 'Gerenciar mensagens',
 } as const;
 
-type RequiredPermission = keyof typeof requiredChannelPermissions;
+type BotPermission = keyof typeof permissionLabels;
+
+function requiredPermissions(isThread: boolean): BotPermission[] {
+  const send = isThread ? 'SendMessagesInThreads' : 'SendMessages';
+  return ['ViewChannel', send, 'ReadMessageHistory', 'AddReactions', 'ManageMessages'];
+}
 
 export async function handleTasksCommand(interaction: ChatInputCommandInteraction<'cached'>) {
   const subcommand = interaction.options.getSubcommand();
@@ -76,16 +89,24 @@ export async function handleTasksCommand(interaction: ChatInputCommandInteractio
 }
 
 async function setChannel(interaction: ChatInputCommandInteraction<'cached'>) {
-  const channel = interaction.options.getChannel('canal', true) as GuildTextBasedChannel;
+  const channel = interaction.options.getChannel('canal', true, TASK_CHANNEL_TYPES);
+  const warnings: string[] = [];
+
+  if (channel.isThread() && !channel.joined) {
+    await channel.join().catch(() => warnings.push('o bot não conseguiu entrar na thread; mencione ele dentro dela'));
+  }
+
+  const permissions = channel.permissionsFor(interaction.guild.members.me!);
+  const missing = requiredPermissions(channel.isThread())
+    .filter((flag) => !permissions?.has(flag))
+    .map((flag) => permissionLabels[flag]);
+  if (missing.length) warnings.push(`o bot não tem estas permissões: ${missing.join(', ')}`);
+
   await updateGuildSettings(interaction.guildId, (settings) => {
     settings.channelId = channel.id;
   });
 
-  const permissions = channel.permissionsFor(interaction.guild.members.me!);
-  const missing = (Object.keys(requiredChannelPermissions) as RequiredPermission[])
-    .filter((flag) => !permissions.has(flag))
-    .map((flag) => requiredChannelPermissions[flag]);
-  const warning = missing.length ? `\nAtenção: o bot não tem estas permissões no canal: ${missing.join(', ')}.` : '';
+  const warning = warnings.map((w) => `\nAtenção: ${w}.`).join('');
 
   await replyEphemeral(interaction, `Canal de tasks definido: ${channel}.${warning}`);
 }
