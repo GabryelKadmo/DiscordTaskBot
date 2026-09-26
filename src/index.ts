@@ -1,4 +1,5 @@
 import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
+import { commandDefinitions } from './commands/index.js';
 import { config } from './config.js';
 import { handleInteractionCreate } from './events/interactionCreate.js';
 import { handleMessageCreate } from './events/messageCreate.js';
@@ -15,9 +16,12 @@ function logErrors<T extends unknown[]>(event: string, handler: (...args: T) => 
   };
 }
 
-client.once(Events.ClientReady, (ready) => {
+async function handleReady(ready: Client<true>) {
+  await ready.application.commands.set(commandDefinitions);
   console.log(`Bot conectado como ${ready.user.tag}`);
-});
+}
+
+client.once(Events.ClientReady, logErrors(Events.ClientReady, handleReady));
 
 client.on(Events.MessageCreate, logErrors(Events.MessageCreate, handleMessageCreate));
 client.on(Events.MessageDelete, logErrors(Events.MessageDelete, handleMessageDelete));

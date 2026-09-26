@@ -12,9 +12,6 @@ function optional(name: string, fallback: string): string {
 
 export const config = {
   token: required('DISCORD_TOKEN'),
-  channelId: required('TASK_CHANNEL_ID'),
-  ianId: required('IAN_USER_ID'),
-  kadmoId: required('KADMO_USER_ID'),
   emojis: {
     received: optional('EMOJI_RECEIVED', '👀'),
     started: optional('EMOJI_STARTED', '🔨'),

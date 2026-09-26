@@ -1,7 +1,16 @@
-import { config } from '../config.js';
-
 export const TASK_ACTIONS = ['copy', 'start', 'complete', 'delete'] as const;
 export type TaskAction = (typeof TASK_ACTIONS)[number];
+
+export const PERMISSION_ACTIONS = ['create', ...TASK_ACTIONS] as const;
+export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
+
+export const ACTION_LABELS: Record<PermissionAction, string> = {
+  create: 'Criar',
+  copy: 'Copiar',
+  start: 'Iniciar',
+  complete: 'Concluir',
+  delete: 'Excluir',
+};
 
 const PREFIX = 'task';
 
@@ -14,15 +23,4 @@ export function parseCustomId(customId: string): { action: TaskAction; messageId
   if (prefix !== PREFIX || !messageId) return null;
   if (!TASK_ACTIONS.includes(action as TaskAction)) return null;
   return { action: action as TaskAction, messageId };
-}
-
-const allowedUsers: Record<TaskAction, string[]> = {
-  copy: [config.ianId, config.kadmoId],
-  start: [config.kadmoId],
-  complete: [config.kadmoId],
-  delete: [config.ianId],
-};
-
-export function canPerform(action: TaskAction, userId: string): boolean {
-  return allowedUsers[action].includes(userId);
 }

@@ -1,13 +1,13 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { buildCustomId, type TaskAction } from './actions.js';
+import { ACTION_LABELS, buildCustomId, type TaskAction } from './actions.js';
 
 export type TaskState = 'pending' | 'started' | 'done';
 
-const buttons: Record<TaskAction, { label: string; style: ButtonStyle }> = {
-  copy: { label: 'Copiar', style: ButtonStyle.Secondary },
-  start: { label: 'Iniciar', style: ButtonStyle.Primary },
-  complete: { label: 'Concluir', style: ButtonStyle.Success },
-  delete: { label: 'Excluir', style: ButtonStyle.Danger },
+const buttonStyles: Record<TaskAction, ButtonStyle> = {
+  copy: ButtonStyle.Secondary,
+  start: ButtonStyle.Primary,
+  complete: ButtonStyle.Success,
+  delete: ButtonStyle.Danger,
 };
 
 const actionsByState: Record<TaskState, TaskAction[]> = {
@@ -21,8 +21,8 @@ export function buildTaskComponents(state: TaskState, messageId: string) {
     actionsByState[state].map((action) =>
       new ButtonBuilder()
         .setCustomId(buildCustomId(action, messageId))
-        .setLabel(buttons[action].label)
-        .setStyle(buttons[action].style),
+        .setLabel(ACTION_LABELS[action])
+        .setStyle(buttonStyles[action]),
     ),
   );
   return [row];
