@@ -1,10 +1,10 @@
 import type { Message, PartialMessage } from 'discord.js';
-import { config } from '../config.js';
 import { ignoreUnknownMessage } from '../discordErrors.js';
+import { getGuildSettings } from '../settings/store.js';
 
 export async function handleMessageDelete(message: Message | PartialMessage): Promise<void> {
-  if (message.channelId !== config.channelId) return;
-  if (message.author && message.author.id !== config.ianId) return;
+  if (!message.guildId || message.author?.bot) return;
+  if (message.channelId !== getGuildSettings(message.guildId).channelId) return;
   if (!message.channel.isTextBased() || message.channel.isDMBased()) return;
 
   const recent = await message.channel.messages.fetch({ limit: 100 });
