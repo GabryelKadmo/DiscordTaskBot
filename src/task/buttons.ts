@@ -33,10 +33,11 @@ export async function handleTaskButton(interaction: ButtonInteraction): Promise<
     return;
   }
 
-  await runAction(interaction, parsed.action, parsed.messageId);
+  await runAction(interaction, parsed.action, parsed.originalId);
 }
 
-async function runAction(interaction: ButtonInteraction, action: TaskAction, messageId: string) {
+async function runAction(interaction: ButtonInteraction, action: TaskAction, originalId?: string) {
+  const messageId = originalId ?? interaction.message.id;
   if (inProgress.has(messageId)) {
     await replyEphemeral(interaction, 'Essa task já está sendo atualizada.');
     return;
@@ -54,13 +55,13 @@ async function runAction(interaction: ButtonInteraction, action: TaskAction, mes
 
     if (action === 'start') {
       await setStateReaction(original, config.emojis.started);
-      await interaction.editReply({ components: buildTaskComponents('started', messageId) });
+      await interaction.editReply({ components: buildTaskComponents('started', originalId) });
     } else if (action === 'complete') {
       await setStateReaction(original, config.emojis.done);
-      await interaction.editReply({ components: buildTaskComponents('done', messageId) });
+      await interaction.editReply({ components: buildTaskComponents('done', originalId) });
     } else {
       await ignoreUnknownMessage(original.delete());
-      await ignoreUnknownMessage(interaction.message.delete());
+      if (originalId) await ignoreUnknownMessage(interaction.message.delete());
     }
   } finally {
     inProgress.delete(messageId);

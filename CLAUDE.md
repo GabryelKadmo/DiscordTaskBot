@@ -24,8 +24,9 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 
 ## Decisões e armadilhas
 
-- **Bot não consegue pôr botões em mensagem de outro usuário** — a API só permite editar componentes de mensagens do próprio bot. Por isso os botões ficam numa única reply do bot (que também é a menção ao responsável). Não tentar "mover" os botões para a mensagem original.
-- Sem banco: o estado de cada task vive na reação da mensagem original e nos botões da reply. A reply é ligada à task pelo `messageId` no `customId` e por `reference.messageId` (usado no `messageDelete` para achar a reply órfã).
+- **Bot não consegue pôr botões em mensagem de outro usuário** — a API só permite componentes em mensagens da própria aplicação. Por isso `src/task/repost.ts` republica a mensagem via webhook da aplicação (nome/avatar do autor, anexos, menção em `-#` e botões numa mensagem só) e apaga a original. O usuário aceitou que o autor não consegue mais editar: para corrigir, usa Excluir e reenvia.
+- Webhook fica no canal pai quando o alvo é um tópico (envio com `threadId`); criado sob demanda e cacheado por canal. Se o repost falhar (ex.: sem Manage Webhooks), cai no modo antigo: reply do bot com os botões apontando para a original.
+- Sem banco: o estado vive na reação e nos botões da própria mensagem da task. `customId` é `task:<ação>` no modo repost e `task:<ação>:<idOriginal>` no modo reply (a reply também é achada por `reference.messageId` no `messageDelete`).
 - Permissões são checadas no servidor em `canPerform`; a UI não é confiável. "Criar" também é permissão: define de quem as mensagens viram task. Sem canal configurado o bot ignora tudo.
 - Slash commands são registrados por servidor (no `ClientReady` e no `GuildCreate`) e os globais são zerados: comando global fica em cache no cliente e aparece como "desatualizado" por minutos; `/tasks` exige `ManageGuild` por padrão (ajustável em Configurações do servidor → Integrações).
 - Menção a cargo só notifica se o cargo for mencionável ou o bot tiver "Mencionar todos".
@@ -36,7 +37,8 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 ## Setup no Discord
 
 - Intent privilegiado **Message Content** ativado no Developer Portal.
-- Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original). Em thread, Send Messages In Threads no lugar de Send Messages. O `/tasks canal` aceita canal ou thread, entra na thread e avisa se faltar alguma permissão.
+- Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original), Manage Webhooks (para o repost). Em thread, Send Messages In Threads no lugar de Send Messages. O `/tasks canal` aceita canal ou thread, entra na thread e avisa se faltar alguma permissão.
+
 ## Deploy (Railway)
 
 - Bot precisa de processo sempre ligado (conexão WebSocket com o gateway): serverless/Vercel não serve.
