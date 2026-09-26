@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { PermissionAction } from '../task/actions.js';
+import { PERMISSION_ACTIONS, type PermissionAction } from '../task/actions.js';
 
 export type Target = { type: 'user' | 'role'; id: string };
 
@@ -18,7 +18,13 @@ const settingsByGuild: Record<string, GuildSettings> = existsSync(FILE)
   : {};
 
 function emptyPermissions(): Record<PermissionAction, Target[]> {
-  return { create: [], copy: [], start: [], complete: [], delete: [] };
+  return { create: [], start: [], complete: [], delete: [] };
+}
+
+function pickPermissions(stored?: Partial<Record<string, Target[]>>): Record<PermissionAction, Target[]> {
+  const permissions = emptyPermissions();
+  for (const action of PERMISSION_ACTIONS) permissions[action] = stored?.[action] ?? [];
+  return permissions;
 }
 
 export function getGuildSettings(guildId: string): GuildSettings {
@@ -26,7 +32,7 @@ export function getGuildSettings(guildId: string): GuildSettings {
   return {
     channelId: stored?.channelId ?? null,
     mention: stored?.mention ?? null,
-    permissions: { ...emptyPermissions(), ...stored?.permissions },
+    permissions: pickPermissions(stored?.permissions),
   };
 }
 
