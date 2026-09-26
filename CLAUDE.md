@@ -27,7 +27,7 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 - **Bot não consegue pôr botões em mensagem de outro usuário** — a API só permite editar componentes de mensagens do próprio bot. Por isso os botões ficam numa única reply do bot (que também é a menção ao responsável). Não tentar "mover" os botões para a mensagem original.
 - Sem banco: o estado de cada task vive na reação da mensagem original e nos botões da reply. A reply é ligada à task pelo `messageId` no `customId` e por `reference.messageId` (usado no `messageDelete` para achar a reply órfã).
 - Permissões são checadas no servidor em `canPerform`; a UI não é confiável. "Criar" também é permissão: define de quem as mensagens viram task. Sem canal configurado o bot ignora tudo.
-- Slash commands são registrados globalmente a cada `ClientReady`; `/tasks` exige `ManageGuild` por padrão (ajustável em Configurações do servidor → Integrações).
+- Slash commands são registrados por servidor (no `ClientReady` e no `GuildCreate`) e os globais são zerados: comando global fica em cache no cliente e aparece como "desatualizado" por minutos; `/tasks` exige `ManageGuild` por padrão (ajustável em Configurações do servidor → Integrações).
 - Menção a cargo só notifica se o cargo for mencionável ou o bot tiver "Mencionar todos".
 - A mensagem original é buscada com `force: true` porque o bot não usa o intent de reações, então o cache de reações fica desatualizado.
 - Todo clique precisa ser respondido (`reply`/`deferUpdate`) para não aparecer "This interaction failed".
