@@ -28,7 +28,7 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 - Webhook fica no canal pai quando o alvo é um tópico (envio com `threadId`); criado sob demanda e cacheado por canal. Se o repost falhar (ex.: sem Manage Webhooks), cai no modo antigo: reply do bot com os botões apontando para a original.
 - Sem banco: o estado vive na reação e nos botões da própria mensagem da task. `customId` é `task:<ação>` no modo repost e `task:<ação>:<idOriginal>` no modo reply (a reply também é achada por `reference.messageId` no `messageDelete`).
 - Permissões são checadas no servidor em `canPerform`; a UI não é confiável. "Criar" também é permissão: define de quem as mensagens viram task. Sem canal configurado o bot ignora tudo.
-- Slash commands são registrados por servidor (no `ClientReady` e no `GuildCreate`) e os globais são zerados: comando global fica em cache no cliente e aparece como "desatualizado" por minutos; `/tasks` exige `ManageGuild` por padrão (ajustável em Configurações do servidor → Integrações).
+- Slash commands são registrados por servidor (no `ClientReady` e no `GuildCreate`) e os globais são zerados: comando global fica em cache no cliente e aparece como "desatualizado" por minutos; `/tasks` só aparece para quem tem `ManageGuild`, mas o handler só aceita o dono da aplicação no Developer Portal (`application.owner`, ou o dono do Team) — nenhuma config do servidor libera para outros.
 - Menção a cargo só notifica se o cargo for mencionável ou o bot tiver "Mencionar todos".
 - A mensagem original é buscada com `force: true` porque o bot não usa o intent de reações, então o cache de reações fica desatualizado.
 - Todo clique precisa ser respondido (`reply`/`deferUpdate`) para não aparecer "This interaction failed".

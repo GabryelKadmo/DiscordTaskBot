@@ -68,6 +68,7 @@ export const tasksCommand = new SlashCommandBuilder()
       .setDescription('Define quem é mencionado a cada nova task (vazio para ninguém)')
       .addMentionableOption((option) => option.setName('alvo').setDescription('Usuário ou cargo')),
   )
+  .addSubcommand((sub) => sub.setName('canal-remover').setDescription('Para de monitorar o canal ou tópico de tasks'))
   .addSubcommand((sub) => sub.setName('config').setDescription('Mostra a configuração atual'));
 
 const permissionLabels = {
@@ -91,6 +92,7 @@ export async function handleTasksCommand(interaction: ChatInputCommandInteractio
   const subcommand = interaction.options.getSubcommand();
 
   if (subcommand === 'canal') await setChannel(interaction);
+  else if (subcommand === 'canal-remover') await removeChannel(interaction);
   else if (subcommand === 'permissao-adicionar') await changePermission(interaction, true);
   else if (subcommand === 'permissao-remover') await changePermission(interaction, false);
   else if (subcommand === 'mencionar') await setMention(interaction);
@@ -126,6 +128,19 @@ async function setChannel(interaction: ChatInputCommandInteraction<'cached'>) {
   const warning = warnings.map((w) => `\nAtenção: ${w}.`).join('');
 
   await replyEphemeral(interaction, `Canal de tasks definido: ${channel}.${warning}`);
+}
+
+async function removeChannel(interaction: ChatInputCommandInteraction<'cached'>) {
+  const { channelId } = getGuildSettings(interaction.guildId);
+  if (!channelId) {
+    await replyEphemeral(interaction, 'Nenhum canal de tasks está definido.');
+    return;
+  }
+
+  await updateGuildSettings(interaction.guildId, (settings) => {
+    settings.channelId = null;
+  });
+  await replyEphemeral(interaction, `O bot parou de monitorar <#${channelId}>.`);
 }
 
 async function resolveChannel(interaction: ChatInputCommandInteraction<'cached'>): Promise<TaskChannel | null> {
