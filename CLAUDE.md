@@ -38,6 +38,14 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 
 - Intent privilegiado **Message Content** ativado no Developer Portal.
 - Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original), Manage Webhooks (para o repost). Em thread, Send Messages In Threads no lugar de Send Messages. O `/tasks canal` aceita canal ou thread, entra na thread e avisa se faltar alguma permissão.
+
+## Deploy (Railway)
+
+- Bot precisa de processo sempre ligado (conexão WebSocket com o gateway): serverless/Vercel não serve.
+- Railway ligado ao repo faz `npm install` → `npm run build` → `npm start` a cada push na `main`.
+- Variáveis no Railway: `DISCORD_TOKEN` e `DATA_DIR` apontando para o volume (ex.: `/data`); sem volume, `settings.json` some a cada deploy.
+- Só uma instância por token: rodar local e no Railway ao mesmo tempo faz toda task ser processada duas vezes.
+
 ## Git
 
 - Sem branch de integração: feature branch → PR para `main`, que aguarda aprovação manual.
