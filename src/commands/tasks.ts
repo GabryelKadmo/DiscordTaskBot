@@ -3,7 +3,9 @@ import {
   InteractionContextType,
   PermissionFlagsBits,
   SlashCommandBuilder,
+  type Channel,
   type ChatInputCommandInteraction,
+  type GuildBasedChannel,
 } from 'discord.js';
 import { replyEphemeral } from '../interactionReply.js';
 import { formatTarget, getGuildSettings, updateGuildSettings, type Target } from '../settings/store.js';
@@ -17,7 +19,13 @@ const TASK_CHANNEL_TYPES = [
   ChannelType.AnnouncementThread,
 ] as const;
 
-const actionChoices =PERMISSION_ACTIONS.map((action) => ({ name: ACTION_LABELS[action], value: action }));
+type TaskChannel = Extract<GuildBasedChannel, { type: (typeof TASK_CHANNEL_TYPES)[number] }>;
+
+function isTaskChannel(channel: Channel | null): channel is TaskChannel {
+  return !!channel && (TASK_CHANNEL_TYPES as readonly ChannelType[]).includes(channel.type);
+}
+
+const actionChoices = PERMISSION_ACTIONS.map((action) => ({ name: ACTION_LABELS[action], value: action }));
 
 export const tasksCommand = new SlashCommandBuilder()
   .setName('tasks')
@@ -33,7 +41,8 @@ export const tasksCommand = new SlashCommandBuilder()
           .setName('canal')
           .setDescription('Canal ou tópico de tasks')
           .addChannelTypes(...TASK_CHANNEL_TYPES),
-      ),
+      )
+      .addStringOption((option) => option.setName('id').setDescription('ID do canal ou tópico de tasks')),
   )
   .addSubcommand((sub) =>
     sub
@@ -88,9 +97,12 @@ export async function handleTasksCommand(interaction: ChatInputCommandInteractio
 }
 
 async function setChannel(interaction: ChatInputCommandInteraction<'cached'>) {
-  const channel = interaction.options.getChannel('canal', false, TASK_CHANNEL_TYPES) ?? interaction.channel;
-  if (!channel || !(TASK_CHANNEL_TYPES as readonly ChannelType[]).includes(channel.type)) {
-    await replyEphemeral(interaction, 'Esse canal não pode ser usado para tasks. Use um canal de texto ou um tópico.');
+  const channel = await resolveChannel(interaction);
+  if (!channel) {
+    await replyEphemeral(
+      interaction,
+      'Canal não encontrado neste servidor ou de um tipo não suportado. Use um canal de texto ou um tópico.',
+    );
     return;
   }
 
@@ -113,6 +125,15 @@ async function setChannel(interaction: ChatInputCommandInteraction<'cached'>) {
   const warning = warnings.map((w) => `\nAtenção: ${w}.`).join('');
 
   await replyEphemeral(interaction, `Canal de tasks definido: ${channel}.${warning}`);
+}
+
+async function resolveChannel(interaction: ChatInputCommandInteraction<'cached'>): Promise<TaskChannel | null> {
+  const selected = interaction.options.getChannel('canal', false, TASK_CHANNEL_TYPES);
+  if (selected) return selected;
+
+  const id = interaction.options.getString('id')?.trim();
+  const channel = id ? await interaction.client.channels.fetch(id).catch(() => null) : interaction.channel;
+  return isTaskChannel(channel) && channel.guildId === interaction.guildId ? channel : null;
 }
 
 async function changePermission(interaction: ChatInputCommandInteraction<'cached'>, adding: boolean) {

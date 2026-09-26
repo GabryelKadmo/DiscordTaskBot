@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, Partials } from 'discord.js';
+import { Client, Events, GatewayIntentBits, Partials, type Guild } from 'discord.js';
 import { commandDefinitions } from './commands/index.js';
 import { config } from './config.js';
 import { handleInteractionCreate } from './events/interactionCreate.js';
@@ -16,12 +16,18 @@ function logErrors<T extends unknown[]>(event: string, handler: (...args: T) => 
   };
 }
 
+async function registerCommands(guild: Guild) {
+  await guild.commands.set(commandDefinitions);
+}
+
 async function handleReady(ready: Client<true>) {
-  await ready.application.commands.set(commandDefinitions);
+  await ready.application.commands.set([]);
+  await Promise.all(ready.guilds.cache.map(registerCommands));
   console.log(`Bot conectado como ${ready.user.tag}`);
 }
 
 client.once(Events.ClientReady, logErrors(Events.ClientReady, handleReady));
+client.on(Events.GuildCreate, logErrors(Events.GuildCreate, registerCommands));
 
 client.on(Events.MessageCreate, logErrors(Events.MessageCreate, handleMessageCreate));
 client.on(Events.MessageDelete, logErrors(Events.MessageDelete, handleMessageDelete));
