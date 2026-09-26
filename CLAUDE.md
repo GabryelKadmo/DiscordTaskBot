@@ -35,4 +35,5 @@ Config em `.env` (modelo em `.env.example`): `DISCORD_TOKEN`, `TASK_CHANNEL_ID`,
 ## Git
 
 - Sem branch de integração: feature branch → PR para `main`, que aguarda aprovação manual.
+- Depois do merge, o Claude apaga a branch local e remota (`gh pr merge --delete-branch`); nunca apagar `main` nem `dev`. Não há workflow de auto-delete e não precisa criar um.
 - Arquivos de ferramentas (`.claude/`, `.deepspace/`, `.mcp.json`, `AGENTS.md`) ficam fora do versionamento.
