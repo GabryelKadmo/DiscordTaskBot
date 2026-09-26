@@ -15,11 +15,12 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 - `src/config.ts` — leitura/validação das env vars
 - `src/settings/store.ts` — configuração por servidor (canal, menção, permissões), persistida em JSON
 - `src/commands/` — slash commands; cada funcionalidade tem seu próprio comando/grupo (`/tasks ...`) e o `/help` descreve tudo
-- `src/task/actions.ts` — ações, labels e formato do `customId` (`task:<ação>:<messageId>`)
+- `src/task/actions.ts` — ações, labels e formato do `customId`
+- `src/task/repost.ts` — republica a mensagem do autor via webhook com os botões
 - `src/task/permissions.ts` — checagem de permissão por usuário ou cargo
 - `src/task/buttons.ts` — handler dos botões da task
 - `src/task/components.ts` — botões de cada estado (`pending` → `started` → `done`)
-- `src/task/reactions.ts` — troca da reação de estado na mensagem do Ian
+- `src/task/reactions.ts` — troca da reação de estado na mensagem da task
 - `src/events/` — um handler por evento do gateway
 
 ## Decisões e armadilhas
@@ -39,12 +40,19 @@ Bot do Discord (Node.js + TypeScript + discord.js v14) que transforma mensagens 
 - Intent privilegiado **Message Content** ativado no Developer Portal.
 - Permissões no canal: View Channel, Send Messages, Read Message History, Add Reactions, Manage Messages (para apagar a mensagem original), Manage Webhooks (para o repost). Em thread, Send Messages In Threads no lugar de Send Messages. O `/tasks canal` aceita canal ou thread, entra na thread e avisa se faltar alguma permissão.
 
-## Deploy (Railway)
+## Deploy (Wispbyte)
 
-- Bot precisa de processo sempre ligado (conexão WebSocket com o gateway): serverless/Vercel não serve.
-- Railway ligado ao repo faz `npm install` → `npm run build` → `npm start` a cada push na `main`.
-- Variáveis no Railway: `DISCORD_TOKEN` e `DATA_DIR` apontando para o volume (ex.: `/data`); sem volume, `settings.json` some a cada deploy.
-- Só uma instância por token: rodar local e no Railway ao mesmo tempo faz toda task ser processada duas vezes.
+- Bot precisa de processo sempre ligado (conexão WebSocket com o gateway): serverless/Vercel não serve. Roda no plano grátis do Wispbyte (painel Pterodactyl, 512 MB / 1 GB); Railway foi descartado por ser pago após o trial.
+- Configuration → Startup: Docker image `nodejs_22` (o padrão é `nodejs_19`) e este Startup Command (o do template roda `node <JS file>` direto, sem build):
+  ```
+  if [[ ! -d .git ]]; then git init -q && git remote add origin https://github.com/GabryelKadmo/DiscordTaskBot.git && git fetch -q origin main && git checkout -q -f -B main origin/main; elif [[ "${AUTO_UPDATE}" == "1" ]]; then git pull; fi; npm install && npm run build && node dist/index.js
+  ```
+  `Auto Update` = `1`; `JS file` = `src/index.ts` (o painel só confere se o arquivo existe antes de ligar; `dist/` ainda não existe nesse momento).
+- Os campos de Git do template só clonam no install e não funcionaram; o código entrou por upload de zip (`git archive`) e o Startup Command acima transforma a pasta em repo e faz `git pull` a cada start. O repo é público justamente para dispensar token.
+- Atualizar em produção = merge na `main` + Restart no painel.
+- `.env` (só `DISCORD_TOKEN`) é criado pelo gerenciador de arquivos do painel, na raiz ao lado do `package.json`. `data/settings.json` persiste no disco do servidor; `DATA_DIR` só é necessário em host com volume separado.
+- É preciso logar no painel a cada 2 semanas, senão o servidor é movido para storage e o bot para.
+- Só uma instância por token: rodar local (`npm run dev`) com o do Wispbyte ligado faz toda task ser processada duas vezes.
 
 ## Git
 
