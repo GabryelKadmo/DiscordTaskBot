@@ -77,13 +77,14 @@ const permissionLabels = {
   ReadMessageHistory: 'Ver histórico de mensagens',
   AddReactions: 'Adicionar reações',
   ManageMessages: 'Gerenciar mensagens',
+  ManageWebhooks: 'Gerenciar webhooks',
 } as const;
 
 type BotPermission = keyof typeof permissionLabels;
 
 function requiredPermissions(isThread: boolean): BotPermission[] {
   const send = isThread ? 'SendMessagesInThreads' : 'SendMessages';
-  return ['ViewChannel', send, 'ReadMessageHistory', 'AddReactions', 'ManageMessages'];
+  return ['ViewChannel', send, 'ReadMessageHistory', 'AddReactions', 'ManageMessages', 'ManageWebhooks'];
 }
 
 export async function handleTasksCommand(interaction: ChatInputCommandInteraction<'cached'>) {

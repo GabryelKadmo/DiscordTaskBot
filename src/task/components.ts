@@ -15,11 +15,11 @@ const actionsByState: Record<TaskState, TaskAction[]> = {
   done: ['delete'],
 };
 
-export function buildTaskComponents(state: TaskState, messageId: string) {
+export function buildTaskComponents(state: TaskState, originalId?: string) {
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     actionsByState[state].map((action) =>
       new ButtonBuilder()
-        .setCustomId(buildCustomId(action, messageId))
+        .setCustomId(buildCustomId(action, originalId))
         .setLabel(ACTION_LABELS[action])
         .setStyle(buttonStyles[action]),
     ),
